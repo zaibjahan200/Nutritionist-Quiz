@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bio-Forge | Analytics</title>
+<link rel="stylesheet" href="styles/main.css">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+.analytics-layout{max-width:1200px;margin:0 auto;padding:var(--sp-xl);position:relative;z-index:1}
+.analytics-header{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-md);flex-wrap:wrap;margin-bottom:var(--sp-xl)}
+.analytics-title{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;background:linear-gradient(135deg,var(--neon-blue),var(--neon-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.analytics-subtitle{color:var(--text-muted);font-size:0.85rem;margin-top:4px}
+.metric-card{background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:16px;padding:18px;text-align:center}
+.metric-val{font-family:'Orbitron',monospace;font-size:1.9rem;font-weight:900}
+.metric-label{font-size:0.72rem;color:var(--text-muted);letter-spacing:0.08em;margin-top:4px}
+.section-divider{border:none;border-top:1px solid rgba(0,212,255,0.15);margin:24px 0}
+.analytics-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--sp-md)}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.panel{background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:20px;padding:20px}
+.panel h3{font-family:'Orbitron',monospace;font-size:0.9rem;margin-bottom:16px;color:var(--neon-blue)}
+.rec-list{display:flex;flex-direction:column;gap:12px}
+.rec-item{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+.rec-item strong{display:block;margin-bottom:4px}
+@media(max-width:1000px){.analytics-grid{grid-template-columns:repeat(2,1fr)}.panel-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="bg-nebula"></div>
+<div class="bg-grid"></div>
+
+<div class="analytics-layout">
+  <div class="analytics-header">
+    <div>
+      <div class="analytics-title">Advanced Analytics</div>
+      <div class="analytics-subtitle" id="snapshotLabel">Loading snapshot...</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="dashboard.html" class="btn btn-ghost">← Dashboard</a>
+      <a href="game.html" class="btn btn-primary">⚡ Play</a>
+    </div>
+  </div>
+
+  <div class="analytics-grid mb-lg" id="metricCards"></div>
+
+  <div class="panel-grid">
+    <div class="panel">
+      <h3>Category Radar</h3>
+      <div id="radarChart" style="height:360px"></div>
+    </div>
+    <div class="panel">
+      <h3>Category Breakdown</h3>
+      <div id="barChart" style="height:360px"></div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="panel-grid">
+    <div class="panel">
+      <h3>Knowledge Gap Heatmap</h3>
+      <div id="gapChart" style="height:320px"></div>
+    </div>
+    <div class="panel">
+      <h3>Recommendations</h3>
+      <div class="rec-list" id="recList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const encoded = params.get('data');
+const snapshotLabel = document.getElementById('snapshotLabel');
+
+function decodePayload(value) {
+  try {
+    return JSON.parse(atob(value));
+  } catch (error) {
+    return null;
+  }
+}
+
+const data = encoded ? decodePayload(encoded) : null;
+if (!data) {
+  snapshotLabel.textContent = 'Invalid or missing analytics payload.';
+  document.getElementById('metricCards').innerHTML = '<div class="metric-card" style="grid-column:1/-1">No analytics payload found. Return to the dashboard and export again.</div>';
+} else {
+  const totalPts = data.tp || 0;
+  const highScore = data.hs || 0;
+  const questions = data.qa || 0;
+  const correct = data.ca || 0;
+  const accuracy = data.acc || 0;
+  const maxStreak = data.ms || 0;
+  const bagels = data.bc || 0;
+  const catStats = data.cs || {};
+  const catLabels = {
+    fat_soluble_vitamins: 'Fat-Soluble Vitamins',
+    water_soluble_vitamins: 'Water-Soluble Vitamins',
+    minerals: 'Minerals & Electrolytes'
+  };
+
+  const ts = data.ts ? new Date(data.ts).toLocaleString() : 'Unknown';
+  snapshotLabel.textContent = `Snapshot: ${ts}`;
+
+  const metrics = [
+    ['⭐ Nutri-Points', totalPts, '#ffd700'],
+    ['🎯 Accuracy', `${accuracy}%`, '#00ff88'],
+    ['📋 Questions', questions, '#00d4ff'],
+    ['✅ Correct', correct, '#00ff88'],
+    ['🔥 Max Streak', maxStreak, '#ff8c00'],
+    ['🥯 Bagels', bagels, '#ffd700']
+  ];
+  document.getElementById('metricCards').innerHTML = metrics.map(([label, val, color]) => `
+    <div class="metric-card">
+      <div class="metric-val" style="color:${color}">${val}</div>
+      <div class="metric-label">${label}</div>
+    </div>
+  `).join('');
+
+  const radarLabels = [];
+  const radarVals = [];
+  const barCats = [];
+  const barCorrect = [];
+  const barWrong = [];
+  const gapCats = [];
+  const gapVals = [];
+  const gapAcc = [];
+  const gapQuestions = [];
+
+  Object.entries(catStats).forEach(([key, value]) => {
+    const total = value.total || 0;
+    const good = value.correct || 0;
+    const pct = total > 0 ? Math.round((good / total) * 1000) / 10 : 0;
+    radarLabels.push(catLabels[key] || key);
+    radarVals.push(pct);
+    barCats.push(catLabels[key] || key);
+    barCorrect.push(good);
+    barWrong.push(Math.max(total - good, 0));
+    gapCats.push(catLabels[key] || key);
+    gapVals.push(Math.max(100 - pct, 0));
+    gapAcc.push(pct);
+    gapQuestions.push(total);
+  });
+
+  const radarTrace = {
+    type: 'scatterpolar',
+    r: radarVals.concat(radarVals[0] || 0),
+    theta: radarLabels.concat(radarLabels[0] || ''),
+    fill: 'toself',
+    fillcolor: 'rgba(0, 212, 255, 0.18)',
+    line: { color: '#00d4ff', width: 2 },
+    marker: { color: '#00d4ff', size: 8 },
+    name: 'Accuracy %'
+  };
+  Plotly.newPlot('radarChart', [radarTrace], {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    margin: { t: 30, b: 40, l: 40, r: 40 },
+    polar: {
+      radialaxis: { visible: true, range: [0, 100], tickfont: { color: '#8892b0', size: 10 }, gridcolor: 'rgba(255,255,255,0.08)' },
+      angularaxis: { tickfont: { color: '#e8eaff', size: 11 }, gridcolor: 'rgba(255,255,255,0.08)' }
+    },
+    font: { color: '#e8eaff' },
+    showlegend: false
+  }, {displayModeBar: false, responsive: true});
+
+  Plotly.newPlot('barChart', [
+    { type: 'bar', x: barCats, y: barCorrect, name: 'Correct', marker: { color: '#00ff88' }, text: barCorrect, textposition: 'inside' },
+    { type: 'bar', x: barCats, y: barWrong, name: 'Wrong', marker: { color: '#ff3366' }, text: barWrong, textposition: 'inside' }
+  ], {
+    barmode: 'stack',
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    margin: { t: 20, b: 20, l: 20, r: 20 },
+    font: { color: '#e8eaff' },
+    legend: { bgcolor: 'rgba(0,0,0,0)', font: { color: '#e8eaff' } },
+    xaxis: { gridcolor: 'rgba(255,255,255,0.05)', tickfont: { size: 10 } },
+    yaxis: { gridcolor: 'rgba(255,255,255,0.05)' }
+  }, {displayModeBar: false, responsive: true});
+
+  Plotly.newPlot('gapChart', [{
+    type: 'bar',
+    x: gapVals,
+    y: gapCats,
+    orientation: 'h',
+    text: gapVals.map(v => `${v}% gap`),
+    textposition: 'outside',
+    marker: { color: gapVals, colorscale: [[0, '#00ff88'], [0.5, '#ffd700'], [1, '#ff3366']], cmin: 0, cmax: 100 }
+  }], {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    margin: { t: 10, b: 10, l: 20, r: 30 },
+    font: { color: '#e8eaff' },
+    xaxis: { range: [0, 100], gridcolor: 'rgba(255,255,255,0.05)' },
+    yaxis: { gridcolor: 'rgba(255,255,255,0.05)' },
+    showlegend: false
+  }, {displayModeBar: false, responsive: true});
+
+  const recList = [];
+  if (accuracy < 50) {
+    recList.push(['High Priority', 'Your overall accuracy is below 50%. Review foundational micronutrient pathophysiology before your next session.']);
+  } else if (accuracy < 70) {
+    recList.push(['Improving', 'Accuracy is between 50–70%. Focus on RDAs, ULs, and symptom-pattern recognition.']);
+  } else {
+    recList.push(['Strong Performance', 'Accuracy above 70%. Push into harder clinical cases and keep the streak going.']);
+  }
+  if (maxStreak >= 5) recList.push(['Streak Master', `Your ${maxStreak}x max streak shows exceptional consistency.`]);
+  if (bagels < 5 && questions > 0) recList.push(['Vault Seeker', 'You have only a few bagels collected. Answer more questions correctly to expand the collection.']);
+  if (bagels >= 15) recList.push(['Vault Champion', `Incredible! ${bagels}/20 bagels collected.`]);
+
+  document.getElementById('recList').innerHTML = recList.map(([title, message]) => `
+    <div class="rec-item">
+      <strong>${title}</strong>
+      <span class="text-muted">${message}</span>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>

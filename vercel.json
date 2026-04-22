@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/streamlit_app/static/index.html" },
+    { "source": "/index.html", "destination": "/streamlit_app/static/index.html" },
+    { "source": "/game.html", "destination": "/streamlit_app/static/game.html" },
+    { "source": "/dashboard.html", "destination": "/streamlit_app/static/dashboard.html" },
+    { "source": "/vault.html", "destination": "/streamlit_app/static/vault.html" },
+    { "source": "/analytics.html", "destination": "/streamlit_app/static/analytics.html" },
+    { "source": "/styles/(.*)", "destination": "/streamlit_app/static/styles/$1" },
+    { "source": "/js/(.*)", "destination": "/streamlit_app/static/js/$1" },
+    { "source": "/assets/(.*)", "destination": "/streamlit_app/static/assets/$1" }
+  ]
+}

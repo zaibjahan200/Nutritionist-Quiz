@@ -292,7 +292,7 @@ function switchTab(tab) {
 // Export
 function launchAnalytics() {
   const code = GS.generateProgressCode();
-  window.parent.location.href = "/?data=" + encodeURIComponent(code);
+  window.location.href = "analytics.html?data=" + encodeURIComponent(code);
 }
 
 function confirmReset() {

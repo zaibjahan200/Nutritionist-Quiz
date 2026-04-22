@@ -1,0 +1,10 @@
+# Legacy Streamlit files (not required for Vercel static deployment)
+streamlit_app/app.py
+streamlit_app/requirements.txt
+streamlit_app/.streamlit/
+
+# Python cache artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
