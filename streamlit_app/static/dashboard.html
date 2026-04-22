@@ -105,7 +105,7 @@
     <button class="tab-btn active" onclick="switchTab('stats')">📊 Performance</button>
     <button class="tab-btn" onclick="switchTab('outfits')">👔 Outfits</button>
     <button class="tab-btn" onclick="switchTab('history')">📋 History</button>
-    <button class="tab-btn" onclick="switchTab('export')">🔗 Export</button>
+    <button class="tab-btn" onclick="switchTab('export')">📊 Advanced Analytics</button>
   </div>
 
   <!-- Tab: Stats -->
@@ -151,25 +151,13 @@
   <!-- Tab: Export -->
   <div class="tab-content" id="tab-export">
     <div class="glass p-lg" style="max-width:700px">
-      <div class="section-title">Streamlit Analytics Export</div>
+      <div class="section-title">Advanced Streamlit Analytics</div>
       <p class="text-muted text-sm mb-lg">
-        Copy your Progress Code and paste it into the 
+        Launch the 
         <strong style="color:var(--neon-blue)">Bio-Forge Streamlit Analytics Dashboard</strong> 
         to see deep analytical insights on your performance.
       </p>
-      <button class="btn btn-primary mb-md" onclick="generateCode()">⚗️ Generate Progress Code</button>
-      <div id="codeDisplay" class="hidden">
-        <div class="code-box" id="codeBox">
-          <button class="copy-btn btn btn-sm btn-ghost" onclick="copyCode()">📋 Copy</button>
-          <div id="codeText" style="margin-top:4px;padding-right:60px"></div>
-        </div>
-        <p class="text-sm text-muted mt-sm">This code encodes your performance data. Paste into the Streamlit app to unlock analytics.</p>
-      </div>
-      <div style="margin-top:24px;padding:16px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);border-radius:12px">
-        <div class="font-orb text-blue" style="font-size:0.75rem;margin-bottom:8px">🌐 STREAMLIT CLOUD APP</div>
-        <p class="text-sm text-muted mb-md">Deploy the included <code style="color:var(--neon-green)">streamlit_app/app.py</code> to Streamlit Cloud and paste your code there.</p>
-        <div class="badge badge-blue">streamlit_app/app.py</div>
-      </div>
+      <button class="btn btn-primary mb-md" onclick="launchAnalytics()">⚗️ View Advanced Analytics</button>
       <div style="margin-top:20px">
         <button class="btn btn-danger btn-sm" onclick="confirmReset()">🗑 Reset Progress</button>
       </div>
@@ -302,15 +290,9 @@ function switchTab(tab) {
 }
 
 // Export
-function generateCode() {
+function launchAnalytics() {
   const code = GS.generateProgressCode();
-  document.getElementById("codeText").textContent = code;
-  document.getElementById("codeDisplay").classList.remove("hidden");
-}
-function copyCode() {
-  const code = document.getElementById("codeText").textContent;
-  navigator.clipboard.writeText(code).then(() => showToast("Code copied!","success"))
-    .catch(() => showToast("Select & copy manually","info"));
+  window.parent.location.href = "/?data=" + encodeURIComponent(code);
 }
 
 function confirmReset() {
