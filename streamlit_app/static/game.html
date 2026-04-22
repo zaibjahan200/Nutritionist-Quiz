@@ -70,6 +70,23 @@ body{overflow:hidden}
 #avatarImg{width:100%;height:100%;object-fit:contain;border-radius:16px}
 #scannerCanvas{position:absolute;inset:0;border-radius:16px;pointer-events:none}
 #symptomLabels{position:absolute;inset:0;pointer-events:none}
+.symptom-label{
+  position:absolute;
+  background:rgba(7,10,24,0.92);
+  border:1px solid rgba(255,215,0,0.75);
+  border-radius:20px;
+  padding:3px 10px;
+  font-size:0.7rem;
+  font-family:'Orbitron',monospace;
+  color:#ffeeb0;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:3;
+  animation:labelFloat 2s ease-in-out infinite alternate;
+  text-shadow:0 1px 3px rgba(0,0,0,0.8),0 0 8px rgba(255,215,0,0.25);
+  box-shadow:0 4px 12px rgba(0,0,0,0.45),0 0 14px rgba(255,215,0,0.2);
+}
+@keyframes labelFloat{from{transform:translateY(0)}to{transform:translateY(-4px)}}
 /* Scan hint */
 .scan-hint{font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--neon-blue);
   opacity:0.6;letter-spacing:0.12em;text-align:center}
