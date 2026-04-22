@@ -36,7 +36,7 @@ if not encoded_data:
     # GAME VIEW (HTML/JS)
     # ──────────────────────────────────────────────
     # Serve the static HTML game
-    st.iframe("app/static/index.html", height=900, scrolling=True)
+    st.iframe("app/static/index.html", height=900)
 
 else:
     # ──────────────────────────────────────────────
