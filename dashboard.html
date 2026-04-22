@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bio-Forge | Dashboard</title>
+<link rel="stylesheet" href="styles/main.css">
+<style>
+.dash-layout{max-width:1200px;margin:0 auto;padding:var(--sp-xl);position:relative;z-index:1}
+.dash-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:var(--sp-md);margin-bottom:var(--sp-xl)}
+.player-hero{display:flex;align-items:center;gap:var(--sp-lg)}
+.player-avatar-icon{width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(123,46,255,0.2));
+  border:2px solid rgba(0,212,255,0.4);display:flex;align-items:center;justify-content:center;
+  font-size:2rem}
+.player-name{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900}
+.player-title{font-size:0.8rem;color:var(--text-muted);margin-top:4px}
+.section-title{font-family:'Orbitron',monospace;font-size:0.75rem;letter-spacing:0.15em;
+  color:var(--neon-blue);text-transform:uppercase;margin-bottom:var(--sp-md)}
+.tab-nav{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:var(--r-full);
+  padding:4px;margin-bottom:var(--sp-xl);width:fit-content}
+.tab-btn{padding:8px 20px;border-radius:var(--r-full);font-family:'Orbitron',monospace;
+  font-size:0.75rem;letter-spacing:0.05em;color:var(--text-muted);background:transparent;
+  border:none;cursor:pointer;transition:all 0.2s;font-weight:600}
+.tab-btn.active{background:rgba(0,212,255,0.18);color:var(--neon-blue);
+  box-shadow:0 0 15px rgba(0,212,255,0.2)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+/* Category bars */
+.cat-bar-wrap{margin-bottom:var(--sp-md)}
+.cat-bar-label{display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px}
+.cat-bar-track{background:rgba(255,255,255,0.06);border-radius:var(--r-full);height:10px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:var(--r-full);transition:width 1.2s cubic-bezier(0.34,1.56,0.64,1)}
+/* Outfit grid */
+.outfit-card{
+  border-radius:var(--r-lg);padding:var(--sp-lg) var(--sp-md);text-align:center;
+  background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);
+  cursor:pointer;transition:all var(--t-spring);
+}
+.outfit-card.equipped{border-color:var(--neon-green);background:rgba(0,255,136,0.06)}
+.outfit-card.locked{opacity:0.5;pointer-events:none}
+.outfit-card.unlocked:not(.equipped):hover{border-color:var(--neon-blue);transform:translateY(-3px)}
+.outfit-icon-lg{font-size:3rem;margin-bottom:var(--sp-sm);display:block}
+.outfit-name{font-family:'Orbitron',monospace;font-size:0.7rem;color:var(--text-primary);margin-bottom:4px}
+.outfit-cost{font-size:0.72rem;color:var(--neon-gold)}
+/* Code box */
+.code-box{
+  background:rgba(0,0,0,0.4);border:1px solid var(--glass-border);
+  border-radius:var(--r-md);padding:var(--sp-md);
+  font-family:monospace;font-size:0.75rem;color:var(--neon-green);
+  word-break:break-all;line-height:1.6;position:relative;
+}
+.copy-btn{position:absolute;top:8px;right:8px}
+/* History table */
+.hist-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.hist-table th{font-family:'Orbitron',monospace;font-size:0.65rem;letter-spacing:0.08em;
+  color:var(--text-muted);text-align:left;padding:8px 12px;border-bottom:1px solid var(--glass-border)}
+.hist-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.hist-table tr:hover td{background:rgba(255,255,255,0.03)}
+.correct-mark{color:var(--neon-green)}
+.wrong-mark{color:var(--neon-red)}
+</style>
+</head>
+<body>
+<div class="bg-nebula"></div>
+<div class="bg-grid"></div>
+
+<div class="dash-layout">
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="player-hero">
+      <div class="player-avatar-icon" id="playerIcon">🧑‍⚕️</div>
+      <div>
+        <div class="player-name" id="playerName">—</div>
+        <div class="player-title" id="playerTitle">Loading...</div>
+        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap" id="headerBadges"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="game.html" class="btn btn-primary">⚡ Continue Rotation</a>
+      <a href="vault.html" class="btn btn-gold">🏆 Bagel Vault</a>
+      <a href="index.html" class="btn btn-ghost">🏠 Home</a>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="grid-4 mb-lg" id="statCards"></div>
+
+  <!-- XP Progress -->
+  <div class="glass p-lg mb-lg">
+    <div class="section-title">Level Progress</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span class="font-orb text-blue" id="currentLevelName">—</span>
+      <span class="font-orb" style="font-size:0.75rem;color:var(--text-muted)" id="nextLevelName">—</span>
+    </div>
+    <div class="xp-bar-wrap" style="height:14px;border-radius:7px">
+      <div class="xp-bar" id="xpBar" style="width:0%;height:100%;border-radius:7px"></div>
+    </div>
+    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px" id="xpLabel"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('stats')">📊 Performance</button>
+    <button class="tab-btn" onclick="switchTab('outfits')">👔 Outfits</button>
+    <button class="tab-btn" onclick="switchTab('history')">📋 History</button>
+    <button class="tab-btn" onclick="switchTab('export')">🔗 Export</button>
+  </div>
+
+  <!-- Tab: Stats -->
+  <div class="tab-content active" id="tab-stats">
+    <div class="grid-2" style="gap:24px">
+      <div class="glass p-lg">
+        <div class="section-title">Category Accuracy</div>
+        <div id="catBars"></div>
+      </div>
+      <div class="glass p-lg">
+        <div class="section-title">Quick Summary</div>
+        <div id="summaryList" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Outfits -->
+  <div class="tab-content" id="tab-outfits">
+    <div class="glass p-lg">
+      <div class="section-title">Outfit Collection</div>
+      <p class="text-muted text-sm mb-lg">Spend Nutri-Points to unlock professional attire for your nutritionist.</p>
+      <div class="grid-3" id="outfitGrid"></div>
+    </div>
+  </div>
+
+  <!-- Tab: History -->
+  <div class="tab-content" id="tab-history">
+    <div class="glass p-lg">
+      <div class="section-title">Answer History (Last 20)</div>
+      <div style="overflow-x:auto">
+        <table class="hist-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Nutrient</th><th>Category</th><th>Result</th><th>Type</th><th>Points</th><th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Export -->
+  <div class="tab-content" id="tab-export">
+    <div class="glass p-lg" style="max-width:700px">
+      <div class="section-title">Streamlit Analytics Export</div>
+      <p class="text-muted text-sm mb-lg">
+        Copy your Progress Code and paste it into the 
+        <strong style="color:var(--neon-blue)">Bio-Forge Streamlit Analytics Dashboard</strong> 
+        to see deep analytical insights on your performance.
+      </p>
+      <button class="btn btn-primary mb-md" onclick="generateCode()">⚗️ Generate Progress Code</button>
+      <div id="codeDisplay" class="hidden">
+        <div class="code-box" id="codeBox">
+          <button class="copy-btn btn btn-sm btn-ghost" onclick="copyCode()">📋 Copy</button>
+          <div id="codeText" style="margin-top:4px;padding-right:60px"></div>
+        </div>
+        <p class="text-sm text-muted mt-sm">This code encodes your performance data. Paste into the Streamlit app to unlock analytics.</p>
+      </div>
+      <div style="margin-top:24px;padding:16px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);border-radius:12px">
+        <div class="font-orb text-blue" style="font-size:0.75rem;margin-bottom:8px">🌐 STREAMLIT CLOUD APP</div>
+        <p class="text-sm text-muted mb-md">Deploy the included <code style="color:var(--neon-green)">streamlit_app/app.py</code> to Streamlit Cloud and paste your code there.</p>
+        <div class="badge badge-blue">streamlit_app/app.py</div>
+      </div>
+      <div style="margin-top:20px">
+        <button class="btn btn-danger btn-sm" onclick="confirmReset()">🗑 Reset Progress</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/question-bank.js"></script>
+<script src="js/game-state.js"></script>
+<script>
+// ---- Load data ----
+const s = GS.getState();
+const pts = s.totalPoints || 0;
+const lv  = GS.getLevel(pts);
+const nlv = GS.getNextLevel(pts);
+
+// Player header
+document.getElementById("playerIcon").textContent = lv.icon || "🧑‍⚕️";
+document.getElementById("playerName").textContent = s.playerName || "Intern";
+document.getElementById("playerTitle").textContent = lv.name;
+document.getElementById("headerBadges").innerHTML = `
+  <span class="badge badge-blue">${lv.icon} ${lv.name}</span>
+  <span class="badge badge-gold">🏆 ${s.bagelsCollected?.length || 0} Bagels</span>
+  <span class="badge badge-green">🔥 ${s.maxStreak || 0} Max Streak</span>
+`;
+
+// Stat cards
+const stats = [
+  { label:"NUTRI-POINTS", val:(pts).toLocaleString(), color:"var(--neon-gold)", icon:"⭐" },
+  { label:"QUESTIONS ANSWERED", val: s.questionsAnswered || 0, color:"var(--neon-blue)", icon:"📋" },
+  { label:"ACCURACY", val: (s.accuracy || 0)+"%", color:"var(--neon-green)", icon:"🎯" },
+  { label:"HIGH SCORE", val: (s.highScore || 0).toLocaleString(), color:"var(--neon-orange)", icon:"🏆" }
+];
+document.getElementById("statCards").innerHTML = stats.map(s => `
+  <div class="stat-card glass">
+    <div style="font-size:1.5rem;margin-bottom:4px">${s.icon}</div>
+    <div class="stat-val" style="color:${s.color}">${s.val}</div>
+    <div class="stat-label">${s.label}</div>
+  </div>`).join("");
+
+// XP bar
+const prog = GS.getLevelProgress(pts);
+document.getElementById("xpBar").style.width = (prog * 100) + "%";
+document.getElementById("currentLevelName").textContent = `${lv.icon} ${lv.name}`;
+document.getElementById("nextLevelName").textContent = nlv ? `→ ${nlv.name} (${nlv.minPoints} pts)` : "🏆 Max Level Reached";
+document.getElementById("xpLabel").textContent = nlv
+  ? `${pts} / ${nlv.minPoints} points to ${nlv.name}`
+  : "You've reached the pinnacle!";
+
+// Category bars
+const CAT_COLORS = { fat_soluble_vitamins:"#ffd700", water_soluble_vitamins:"#00d4ff", minerals:"#00ff88" };
+const CAT_LABELS = { fat_soluble_vitamins:"Fat-Soluble Vitamins", water_soluble_vitamins:"Water-Soluble Vitamins", minerals:"Minerals & Electrolytes" };
+const catStats = s.categoryStats || {};
+document.getElementById("catBars").innerHTML = Object.entries(catStats).map(([k, v]) => {
+  const pct = v.total > 0 ? Math.round((v.correct/v.total)*100) : 0;
+  return `
+    <div class="cat-bar-wrap">
+      <div class="cat-bar-label">
+        <span style="color:var(--text-primary)">${CAT_LABELS[k] || k}</span>
+        <span style="color:${CAT_COLORS[k]}">${pct}% (${v.correct}/${v.total})</span>
+      </div>
+      <div class="cat-bar-track">
+        <div class="cat-bar-fill" style="width:${pct}%;background:${CAT_COLORS[k]}"></div>
+      </div>
+    </div>`;
+}).join("") || '<div class="text-muted text-sm">No data yet — play a round first!</div>';
+
+// Summary list
+document.getElementById("summaryList").innerHTML = [
+  ["🥯 Bagels Collected", s.bagelsCollected?.length || 0],
+  ["🔥 Max Streak", s.maxStreak || 0],
+  ["✅ Correct Answers", s.correctAnswers || 0],
+  ["❌ Wrong Answers", (s.questionsAnswered||0) - (s.correctAnswers||0)],
+  ["👔 Outfit", GS.getOutfits().find(o=>o.equipped)?.label || "Scrubs"]
+].map(([l,v]) => `
+  <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+    <span class="text-muted">${l}</span>
+    <span class="font-orb" style="font-size:0.85rem">${v}</span>
+  </div>`).join("");
+
+// Outfit grid
+function renderOutfits() {
+  const outfits = GS.getOutfits();
+  document.getElementById("outfitGrid").innerHTML = outfits.map(o => `
+    <div class="outfit-card ${o.equipped ? "equipped" : ""} ${o.unlocked ? "unlocked" : "locked"}"
+         onclick="${o.unlocked && !o.equipped ? `equipOutfit('${o.id}')` : !o.unlocked ? `purchaseOutfit('${o.id}')` : ""}">
+      <span class="outfit-icon-lg">${o.icon}</span>
+      <div class="outfit-name">${o.label}</div>
+      ${o.equipped ? '<span class="badge badge-green mt-sm">✓ Equipped</span>' :
+        o.unlocked  ? '<button class="btn btn-sm btn-ghost mt-sm">Equip</button>' :
+        `<div class="outfit-cost mt-sm">🌟 ${o.cost} pts</div>
+         <button class="btn btn-sm ${o.canAfford ? "btn-gold" : "btn-ghost"} mt-sm">${o.canAfford ? "Unlock" : "Need "+o.cost+" pts"}</button>`
+      }
+    </div>`).join("");
+}
+renderOutfits();
+
+function equipOutfit(id) { GS.equipOutfit(id); renderOutfits(); showToast("Outfit equipped!","success"); }
+function purchaseOutfit(id) {
+  const ok = GS.purchaseOutfit(id);
+  if (ok) { renderOutfits(); showToast("Outfit unlocked! 🎉","success"); }
+  else showToast("Not enough Nutri-Points!","error");
+}
+
+// History
+const hist = [...(s.history || [])].reverse().slice(0, 20);
+document.getElementById("historyBody").innerHTML = hist.length ? hist.map((h, i) => {
+  const d = new Date(h.timestamp);
+  const time = d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+  const typeIcons = { optimal:"🟢 Optimal", deficient:"🟡 Insufficient", toxic:"🔴 Toxic" };
+  return `<tr>
+    <td class="text-muted">${hist.length - i}</td>
+    <td>${h.nutrient || "—"}</td>
+    <td><span class="badge badge-blue" style="font-size:0.6rem">${CAT_LABELS[h.category]?.split(" ")[0] || h.category || "—"}</span></td>
+    <td class="${h.correct ? "correct-mark" : "wrong-mark"}">${h.correct ? "✅ Correct" : "❌ Wrong"}</td>
+    <td style="font-size:0.75rem">${typeIcons[h.chosenType] || h.chosenType}</td>
+    <td style="color:${h.pointsEarned >= 0 ? "var(--neon-green)" : "var(--neon-red)"}">${h.pointsEarned >= 0 ? "+" : ""}${h.pointsEarned}</td>
+    <td class="text-muted" style="font-size:0.72rem">${time}</td>
+  </tr>`;
+}).join("") : `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">No game history yet. Play a round!</td></tr>`;
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById(`tab-${tab}`).classList.add("active");
+  event.target.classList.add("active");
+}
+
+// Export
+function generateCode() {
+  const code = GS.generateProgressCode();
+  document.getElementById("codeText").textContent = code;
+  document.getElementById("codeDisplay").classList.remove("hidden");
+}
+function copyCode() {
+  const code = document.getElementById("codeText").textContent;
+  navigator.clipboard.writeText(code).then(() => showToast("Code copied!","success"))
+    .catch(() => showToast("Select & copy manually","info"));
+}
+
+function confirmReset() {
+  if (confirm("⚠️ This will permanently delete all progress. Are you sure?")) {
+    GS.reset();
+    showToast("Progress reset. Starting fresh!","info");
+    setTimeout(() => window.location.href = "index.html", 1500);
+  }
+}
+
+function showToast(msg, type="info") {
+  const tc = document.getElementById("toastContainer");
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(() => { t.classList.add("toast-out"); setTimeout(()=>t.remove(),350); }, 3000);
+}
+</script>
+</body>
+</html>

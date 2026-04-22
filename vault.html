@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bio-Forge | Holographic Bagel Vault</title>
+<link rel="stylesheet" href="styles/main.css">
+<style>
+.vault-layout{max-width:1100px;margin:0 auto;padding:var(--sp-xl);position:relative;z-index:1}
+.vault-header{text-align:center;margin-bottom:var(--sp-2xl)}
+.vault-title{font-size:2.5rem;font-weight:900;
+  background:linear-gradient(135deg,var(--neon-gold),var(--neon-orange),var(--neon-blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:8px}
+.vault-subtitle{color:var(--text-muted);font-size:0.9rem}
+.vault-counter{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);
+  border-radius:var(--r-full);padding:8px 20px;margin-top:12px;
+  font-family:'Orbitron',monospace;font-size:0.8rem;color:var(--neon-gold)
+}
+/* Filter bar */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:var(--sp-xl)}
+.filter-btn{padding:6px 16px;border-radius:var(--r-full);font-family:'Orbitron',monospace;
+  font-size:0.7rem;letter-spacing:0.06em;font-weight:600;cursor:pointer;
+  background:transparent;border:1px solid var(--glass-border);
+  color:var(--text-muted);transition:all 0.2s}
+.filter-btn.active{background:rgba(0,212,255,0.15);border-color:rgba(0,212,255,0.4);
+  color:var(--neon-blue)}
+/* Bagel grid */
+.bagel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--sp-md)}
+/* Bagel card extended */
+.bagel-vault-card{
+  border-radius:var(--r-lg);padding:20px 12px;text-align:center;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.03);
+  cursor:pointer;transition:all var(--t-spring);
+  position:relative;overflow:hidden;
+}
+.bagel-vault-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center, var(--glow-color,rgba(0,212,255,0.08)) 0%, transparent 70%);
+  opacity:0;transition:opacity 0.3s;
+}
+.bagel-vault-card:hover::before,.bagel-vault-card.unlocked:hover::before{opacity:1}
+.bagel-vault-card.unlocked{cursor:pointer}
+.bagel-vault-card.unlocked:hover{
+  transform:translateY(-8px) scale(1.04);
+  box-shadow:0 16px 40px var(--glow-shadow,rgba(0,212,255,0.25));
+  border-color:var(--glow-color,rgba(0,212,255,0.4));
+}
+.bagel-vault-card.locked-card{
+  filter:grayscale(1) brightness(0.35);
+  cursor:default;
+}
+.bagel-3d-icon{
+  font-size:3rem;display:block;margin:0 auto 10px;
+  transition:transform 0.3s;
+}
+.bagel-vault-card.unlocked:hover .bagel-3d-icon{
+  animation:bagelVaultSpin 1.2s ease-in-out;
+}
+@keyframes bagelVaultSpin{
+  0%{transform:rotateY(0deg) scale(1)}
+  50%{transform:rotateY(180deg) scale(1.15)}
+  100%{transform:rotateY(360deg) scale(1)}
+}
+.bagel-vault-name{font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:700;
+  color:var(--text-primary);margin-bottom:6px;line-height:1.4}
+.bagel-vault-rarity{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-family:'Orbitron',monospace}
+.rarity-common .bagel-vault-rarity{color:#8892b0}
+.rarity-uncommon .bagel-vault-rarity{color:var(--neon-green)}
+.rarity-rare .bagel-vault-rarity{color:var(--neon-blue)}
+.rarity-epic .bagel-vault-rarity{color:#b47fff}
+.rarity-legendary .bagel-vault-rarity{color:var(--neon-gold);text-shadow:0 0 8px rgba(255,215,0,0.5)}
+.locked-text{font-family:'Orbitron',monospace;font-size:0.6rem;color:#444;margin-top:4px}
+.earned-date{font-size:0.6rem;color:var(--text-muted);margin-top:4px}
+/* Detail modal */
+.bagel-modal{
+  display:none;position:fixed;inset:0;background:rgba(8,8,15,0.9);
+  z-index:1000;align-items:center;justify-content:center;
+}
+.bagel-modal.active{display:flex}
+.bagel-modal-card{
+  max-width:420px;width:90%;padding:var(--sp-2xl);text-align:center;
+  animation:modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalPop{from{transform:scale(0.7) rotate(-3deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.modal-bagel-icon{font-size:5rem;display:block;margin:0 auto var(--sp-md);
+  animation:bagelSpin 3s linear infinite}
+.modal-bagel-name{font-size:1.2rem;font-weight:900;margin-bottom:8px}
+.modal-bagel-nutrient{font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:16px}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;
+  color:var(--text-muted);font-size:1.5rem;cursor:pointer;padding:4px}
+/* Rarity glow borders */
+.rarity-legendary{border-color:rgba(255,215,0,0.5)!important;box-shadow:0 0 20px rgba(255,215,0,0.15)!important}
+.rarity-epic{border-color:rgba(123,46,255,0.5)!important;box-shadow:0 0 15px rgba(123,46,255,0.1)!important}
+.rarity-rare{border-color:rgba(0,212,255,0.4)!important}
+.rarity-uncommon{border-color:rgba(0,255,136,0.3)!important}
+</style>
+</head>
+<body>
+<div class="bg-nebula"></div>
+<div class="bg-grid"></div>
+
+<div class="vault-layout">
+  <!-- Header -->
+  <div class="vault-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-md);flex-wrap:wrap;gap:var(--sp-md)">
+      <a href="dashboard.html" class="btn btn-ghost">← Dashboard</a>
+      <div style="display:flex;gap:8px">
+        <a href="game.html" class="btn btn-primary">⚡ Play</a>
+      </div>
+    </div>
+    <div style="font-family:'Orbitron',monospace;font-size:0.7rem;color:var(--neon-blue);letter-spacing:0.2em;margin-bottom:8px">🏆 HOLOGRAPHIC BAGEL VAULT</div>
+    <h1 class="vault-title">Trophy Collection</h1>
+    <p class="vault-subtitle">Each bagel represents a micronutrient mastered. Hover to inspect. Click to reveal lore.</p>
+    <div class="vault-counter">
+      🥯 <span id="vaultCounter">0 / 20</span> Trophies Collected
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterBagels('all', this)">All</button>
+    <button class="filter-btn" onclick="filterBagels('unlocked', this)">✅ Collected</button>
+    <button class="filter-btn" onclick="filterBagels('locked', this)">🔒 Locked</button>
+    <button class="filter-btn" onclick="filterBagels('legendary', this)">⭐ Legendary</button>
+    <button class="filter-btn" onclick="filterBagels('epic', this)">💜 Epic</button>
+    <button class="filter-btn" onclick="filterBagels('rare', this)">💙 Rare</button>
+  </div>
+
+  <!-- Bagel Grid -->
+  <div class="bagel-grid" id="bagelGrid"></div>
+</div>
+
+<!-- Bagel Detail Modal -->
+<div class="bagel-modal" id="bagelModal">
+  <div class="bagel-modal-card glass" style="position:relative">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <span class="modal-bagel-icon" id="modalIcon">🥯</span>
+    <div class="modal-bagel-name font-orb text-gold" id="modalName"></div>
+    <div class="badge mb-md" id="modalRarity" style="margin:8px auto;display:inline-flex"></div>
+    <div class="modal-bagel-nutrient" id="modalNutrient"></div>
+    <div class="wardlaw-panel" id="modalWardlaw" style="text-align:left"></div>
+    <button class="btn btn-primary mt-lg" onclick="closeModal()">Close Vault</button>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/question-bank.js"></script>
+<script src="js/game-state.js"></script>
+<script>
+const s = GS.getState();
+const collected = s.bagelsCollected || [];
+const collectedIds = new Set(collected.map(b => b.id));
+
+// Build full registry from question bank with nutrient info
+const FULL_VAULT = QUESTION_BANK.map(q => ({
+  ...q.bagel,
+  nutrient: q.nutrient,
+  category: q.category,
+  wardlaw: q.wardlawPerspective.slice(0, 280) + "…",
+  earnedAt: collected.find(b => b.id === q.bagel.id)?.earnedAt
+}));
+
+const RARITY_COLORS = {
+  common:    { border:"rgba(136,146,176,0.3)", glow:"rgba(136,146,176,0.2)", shadow:"rgba(136,146,176,0.2)" },
+  uncommon:  { border:"rgba(0,255,136,0.35)",  glow:"rgba(0,255,136,0.12)", shadow:"rgba(0,255,136,0.25)" },
+  rare:      { border:"rgba(0,212,255,0.4)",   glow:"rgba(0,212,255,0.1)",  shadow:"rgba(0,212,255,0.3)" },
+  epic:      { border:"rgba(123,46,255,0.5)",  glow:"rgba(123,46,255,0.12)",shadow:"rgba(123,46,255,0.35)" },
+  legendary: { border:"rgba(255,215,0,0.55)",  glow:"rgba(255,215,0,0.14)", shadow:"rgba(255,215,0,0.45)" }
+};
+
+let currentFilter = "all";
+
+function renderVault(filter = "all") {
+  currentFilter = filter;
+  const grid = document.getElementById("bagelGrid");
+  const items = filter === "all" ? FULL_VAULT :
+    filter === "unlocked" ? FULL_VAULT.filter(b => collectedIds.has(b.id)) :
+    filter === "locked"   ? FULL_VAULT.filter(b => !collectedIds.has(b.id)) :
+    FULL_VAULT.filter(b => b.rarity === filter);
+
+  const total = collected.length;
+  document.getElementById("vaultCounter").textContent = `${total} / ${FULL_VAULT.length}`;
+
+  grid.innerHTML = items.map(bagel => {
+    const isUnlocked = collectedIds.has(bagel.id);
+    const rc = RARITY_COLORS[bagel.rarity] || RARITY_COLORS.common;
+    const earnedDate = bagel.earnedAt ? new Date(bagel.earnedAt).toLocaleDateString() : null;
+    return `
+      <div class="bagel-vault-card rarity-${bagel.rarity} ${isUnlocked ? "unlocked" : "locked-card"}"
+           style="--glow-color:${rc.glow};--glow-shadow:${rc.shadow};${isUnlocked ? "border-color:"+rc.border+";" : ""}"
+           onclick="${isUnlocked ? `openModal('${bagel.id}')` : ""}">
+        <span class="bagel-3d-icon">${isUnlocked ? bagel.icon : "🔒"}</span>
+        <div class="bagel-vault-name">${isUnlocked ? bagel.name : "???"}</div>
+        <div class="bagel-vault-rarity">${bagel.rarity}</div>
+        ${isUnlocked && earnedDate ? `<div class="earned-date">Earned ${earnedDate}</div>` : ""}
+        ${!isUnlocked ? `<div class="locked-text">Answer correctly to unlock</div>` : ""}
+        ${isUnlocked ? `<div style="margin-top:6px;font-size:0.6rem;color:var(--text-muted)">Click to inspect</div>` : ""}
+      </div>
+    `;
+  }).join("") || `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)">No trophies match this filter yet.</div>`;
+}
+
+function filterBagels(type, btn) {
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderVault(type);
+}
+
+function openModal(id) {
+  const bagel = FULL_VAULT.find(b => b.id === id);
+  if (!bagel) return;
+  const rc = RARITY_COLORS[bagel.rarity] || RARITY_COLORS.common;
+  document.getElementById("modalIcon").textContent = bagel.icon;
+  document.getElementById("modalName").textContent = bagel.name;
+  const badges = { common:"🔘 Common", uncommon:"🟢 Uncommon", rare:"🔵 Rare", epic:"💜 Epic", legendary:"⭐ Legendary" };
+  const badgeCls = { common:"badge-blue", uncommon:"badge-green", rare:"badge-blue", epic:"badge-purple", legendary:"badge-gold" };
+  document.getElementById("modalRarity").className = `badge ${badgeCls[bagel.rarity] || "badge-blue"} mb-md`;
+  document.getElementById("modalRarity").textContent = badges[bagel.rarity] || bagel.rarity;
+  document.getElementById("modalNutrient").innerHTML = `<strong style="color:var(--neon-blue)">${bagel.nutrient}</strong><br>${bagel.category.replace(/_/g," ")}`;
+  document.getElementById("modalWardlaw").innerHTML = `<div class="wardlaw-title">⚗️ Wardlaw's Highlight</div><div class="wardlaw-text">${bagel.wardlaw}</div>`;
+  document.getElementById("bagelModal").classList.add("active");
+}
+
+function closeModal() {
+  document.getElementById("bagelModal").classList.remove("active");
+}
+
+// Close modal on backdrop click
+document.getElementById("bagelModal").addEventListener("click", e => {
+  if (e.target === document.getElementById("bagelModal")) closeModal();
+});
+
+renderVault();
+</script>
+</body>
+</html>

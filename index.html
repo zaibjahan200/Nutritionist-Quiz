@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>kinetic-alchemy: The Bio-Forge | Login</title>
+<meta name="description" content="A gamified micronutrient clinical quiz for dietetics students and healthcare professionals. Diagnose, treat, and earn bagel trophies.">
+<link rel="stylesheet" href="styles/main.css">
+<style>
+.particles-bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+.login-hero{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;position:relative;z-index:1}
+@media(max-width:900px){.login-hero{grid-template-columns:1fr}.hero-side{display:none}}
+.hero-side{
+  background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(123,46,255,0.12));
+  border-right:1px solid var(--glass-border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:var(--sp-2xl);gap:var(--sp-xl);
+}
+.hero-feature{display:flex;align-items:flex-start;gap:var(--sp-md);max-width:360px}
+.hero-feature-icon{font-size:2rem;flex-shrink:0}
+.hero-feature-text h4{font-family:'Orbitron',monospace;font-size:0.85rem;color:var(--neon-blue);margin-bottom:4px}
+.hero-feature-text p{font-size:0.8rem;color:var(--text-muted);line-height:1.5}
+.login-side{display:flex;align-items:center;justify-content:center;padding:var(--sp-xl)}
+.name-setup{display:none}
+.name-setup.active{display:block}
+.auth-form{display:block}
+.auth-form.hidden{display:none}
+.tabs{display:flex;gap:2px;background:rgba(255,255,255,0.05);border-radius:var(--r-full);padding:3px;margin-bottom:var(--sp-xl)}
+.tab-btn{flex:1;padding:8px 16px;border-radius:var(--r-full);font-family:'Orbitron',monospace;font-size:0.75rem;
+  font-weight:600;letter-spacing:0.05em;color:var(--text-muted);background:transparent;
+  border:none;cursor:pointer;transition:all 0.2s}
+.tab-btn.active{background:rgba(0,212,255,0.2);color:var(--neon-blue);box-shadow:0 0 15px rgba(0,212,255,0.2)}
+.floating-bagels{position:fixed;pointer-events:none;z-index:0;inset:0}
+.float-bagel{position:absolute;font-size:2rem;opacity:0.08;animation:floatDrift linear infinite}
+@keyframes floatDrift{
+  0%{transform:translateY(110vh) rotate(0deg)}
+  100%{transform:translateY(-20vh) rotate(360deg)}
+}
+</style>
+</head>
+<body>
+<div class="bg-nebula"></div>
+<div class="bg-grid"></div>
+<canvas class="particles-bg" id="particles-canvas"></canvas>
+
+<!-- Floating decorative bagels -->
+<div class="floating-bagels" id="floatBagels"></div>
+
+<div class="login-hero">
+  <!-- LEFT: Feature showcase -->
+  <div class="hero-side">
+    <div>
+      <div style="font-family:'Orbitron',monospace;font-size:0.7rem;color:var(--neon-blue);letter-spacing:0.2em;margin-bottom:var(--sp-sm)">● KINETIC-ALCHEMY</div>
+      <h1 style="font-size:2.2rem;line-height:1.2;margin-bottom:var(--sp-md)">
+        The <span class="text-gold">Bio-Forge</span><br>
+        <span style="font-size:1rem;color:var(--text-secondary);font-family:'Inter',sans-serif;font-weight:400">Micronutrient Clinical Simulator</span>
+      </h1>
+      <p style="color:var(--text-muted);font-size:0.85rem;line-height:1.6;max-width:380px">
+        Diagnose and treat real-world micronutrient cases through a dynamic patient avatar. 
+        Earn Bagel Trophies, unlock outfits, and rise from Intern to Bio-Alchemist.
+      </p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--sp-lg);width:100%;max-width:380px">
+      <div class="hero-feature">
+        <div class="hero-feature-icon">🧬</div>
+        <div class="hero-feature-text">
+          <h4>Dynamic Bio-Avatar</h4>
+          <p>A cartoon patient whose symptoms change based on the clinical case — complete with holographic scanner.</p>
+        </div>
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon">🏆</div>
+        <div class="hero-feature-text">
+          <h4>Bagel Trophy Vault</h4>
+          <p>Collect 20 unique nutritional trophies from the Golden Carrot Bagel to the Legendary Refeeding Renaissance Bagel.</p>
+        </div>
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon">📊</div>
+        <div class="hero-feature-text">
+          <h4>Analytics on Streamlit Cloud</h4>
+          <p>Export your progress code and view deep-dive performance analytics on the companion Streamlit dashboard.</p>
+        </div>
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon">⚗️</div>
+        <div class="hero-feature-text">
+          <h4>Wardlaw's Perspectives</h4>
+          <p>Every answer triggers a physiology explanation grounded in contemporary nutrition science.</p>
+        </div>
+      </div>
+    </div>
+    <!-- Level preview -->
+    <div style="display:flex;gap:var(--sp-sm);flex-wrap:wrap">
+      <span class="badge badge-blue">🩺 Intern</span>
+      <span class="badge badge-gold">📋 Junior Dietitian</span>
+      <span class="badge badge-green">🔬 Senior Dietitian</span>
+      <span class="badge badge-purple">⚗️ Bio-Alchemist</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: Login / Setup -->
+  <div class="login-side">
+    <div class="login-card glass" style="position:relative;z-index:2">
+      <span class="logo-mark">🧬</span>
+      <h2 class="logo-title">THE BIO-FORGE</h2>
+      <div class="logo-subtitle">Kinetic Alchemy · Clinical Simulator</div>
+
+      <!-- Name Setup (shown if no saved name) -->
+      <div class="name-setup" id="nameSetup">
+        <p class="text-muted text-sm mb-md">Enter your name to begin your clinical journey.</p>
+        <div class="input-group">
+          <label class="input-label" for="playerNameInput">Your Name / Codename</label>
+          <input class="input-field" id="playerNameInput" type="text" placeholder="e.g. Dr. Amina K." maxlength="30" autocomplete="off">
+        </div>
+        <button class="btn btn-primary btn-lg w-full" id="startBtn" onclick="handleStart()">
+          🚀 Begin Clinical Rotation
+        </button>
+        <div class="divider">or</div>
+        <button class="btn btn-ghost w-full" onclick="handleDemo()">
+          👁 Continue as Guest
+        </button>
+      </div>
+
+      <!-- Returning player -->
+      <div class="auth-form hidden" id="returningForm">
+        <div class="glass" style="padding:var(--sp-md);border-radius:var(--r-md);margin-bottom:var(--sp-lg);text-align:left">
+          <div class="text-xs text-muted mb-sm">Welcome back,</div>
+          <div id="returningName" class="font-orb text-blue" style="font-size:1.1rem"></div>
+          <div id="returningStats" class="text-xs text-muted mt-sm"></div>
+        </div>
+        <button class="btn btn-primary btn-lg w-full" onclick="handleContinue()">
+          ▶ Continue Rotation
+        </button>
+        <div class="divider">or</div>
+        <button class="btn btn-ghost w-full" onclick="showNewPlayer()">
+          + New Player
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ---- Floating bagels ----
+const BAGEL_EMOJIS = ["🥯","🥕","🍊","🌾","💊","🧂","🍫","🍌","🥛","🥚","🦪","🌻"];
+const floatEl = document.getElementById("floatBagels");
+for (let i = 0; i < 14; i++) {
+  const el = document.createElement("div");
+  el.className = "float-bagel";
+  el.textContent = BAGEL_EMOJIS[i % BAGEL_EMOJIS.length];
+  el.style.left = `${Math.random() * 100}%`;
+  el.style.animationDuration = `${8 + Math.random() * 14}s`;
+  el.style.animationDelay = `-${Math.random() * 15}s`;
+  el.style.fontSize = `${1.5 + Math.random() * 2}rem`;
+  floatEl.appendChild(el);
+}
+
+// ---- Canvas particles ----
+const pc = document.getElementById("particles-canvas");
+const pctx = pc.getContext("2d");
+pc.width = window.innerWidth; pc.height = window.innerHeight;
+window.addEventListener("resize", () => { pc.width = window.innerWidth; pc.height = window.innerHeight; });
+
+const dots = Array.from({length: 60}, () => ({
+  x: Math.random()*pc.width, y: Math.random()*pc.height,
+  vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4,
+  r: 1+Math.random()*2, a: Math.random()
+}));
+
+(function animDots() {
+  requestAnimationFrame(animDots);
+  pctx.clearRect(0,0,pc.width,pc.height);
+  dots.forEach(d => {
+    d.x += d.vx; d.y += d.vy;
+    if (d.x < 0) d.x = pc.width;
+    if (d.x > pc.width) d.x = 0;
+    if (d.y < 0) d.y = pc.height;
+    if (d.y > pc.height) d.y = 0;
+    pctx.beginPath();
+    pctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+    pctx.fillStyle = `rgba(0,212,255,${0.1+d.a*0.2})`;
+    pctx.fill();
+  });
+
+  // Draw connections
+  for (let i = 0; i < dots.length; i++) {
+    for (let j = i+1; j < dots.length; j++) {
+      const dx = dots[i].x - dots[j].x;
+      const dy = dots[i].y - dots[j].y;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if (dist < 100) {
+        pctx.beginPath();
+        pctx.moveTo(dots[i].x, dots[i].y);
+        pctx.lineTo(dots[j].x, dots[j].y);
+        pctx.strokeStyle = `rgba(0,212,255,${0.08*(1-dist/100)})`;
+        pctx.lineWidth = 0.5;
+        pctx.stroke();
+      }
+    }
+  }
+})();
+
+// ---- State check ----
+const savedRaw = localStorage.getItem("bioforge_state");
+let savedState = null;
+try { savedState = savedRaw ? JSON.parse(savedRaw) : null; } catch {}
+
+if (savedState && savedState.playerName && savedState.playerName !== "Intern") {
+  // Show returning player UI
+  document.getElementById("returningForm").classList.remove("hidden");
+  document.getElementById("returningName").textContent = savedState.playerName;
+  document.getElementById("returningStats").textContent =
+    `${savedState.totalPoints || 0} Nutri-Points · ${savedState.bagelsCollected?.length || 0} Bagels · ${savedState.accuracy || 0}% accuracy`;
+} else {
+  document.getElementById("nameSetup").classList.add("active");
+}
+
+function handleStart() {
+  const name = document.getElementById("playerNameInput").value.trim();
+  if (!name) { showToast("Please enter your name!", "error"); return; }
+  const s = savedState || {};
+  s.playerName = name;
+  localStorage.setItem("bioforge_state", JSON.stringify(s));
+  window.location.href = "game.html";
+}
+
+function handleDemo() {
+  if (!savedState) {
+    localStorage.setItem("bioforge_state", JSON.stringify({...{playerName:"Guest Intern"}}));
+  }
+  window.location.href = "game.html";
+}
+
+function handleContinue() {
+  window.location.href = "game.html";
+}
+
+function showNewPlayer() {
+  document.getElementById("returningForm").classList.add("hidden");
+  document.getElementById("nameSetup").classList.add("active");
+}
+
+// Enter key to start
+document.getElementById("playerNameInput")?.addEventListener("keydown", e => {
+  if (e.key === "Enter") handleStart();
+});
+
+function showToast(msg, type = "info") {
+  const tc = document.getElementById("toastContainer");
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(() => { t.classList.add("toast-out"); setTimeout(() => t.remove(), 350); }, 3000);
+}
+</script>
+</body>
+</html>
