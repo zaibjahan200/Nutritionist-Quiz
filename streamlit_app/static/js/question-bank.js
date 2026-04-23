@@ -503,6 +503,23 @@ function inferBagel(question, index) {
   };
 }
 
+function shuffleOptionsWithAnswer(question) {
+  const entries = question.opts.map((label, idx) => ({
+    label,
+    originalIndex: idx,
+    isCorrect: idx === question.ans
+  }));
+
+  for (let i = entries.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [entries[i], entries[j]] = [entries[j], entries[i]];
+  }
+
+  const shuffledOpts = entries.map(e => e.label);
+  const shuffledAns = entries.findIndex(e => e.isCorrect);
+  return { shuffledOpts, shuffledAns };
+}
+
 function enrichQuestion(question, index) {
   const letters = ["a", "b", "c", "d"];
   const category = inferCategory(question);
@@ -511,8 +528,10 @@ function enrichQuestion(question, index) {
   const avatarState = inferAvatarState(question);
   const bagel = inferBagel(question, index);
 
-  const options = question.opts.map((label, optionIndex) => {
-    const correct = optionIndex === question.ans;
+  const { shuffledOpts, shuffledAns } = shuffleOptionsWithAnswer(question);
+
+  const options = shuffledOpts.map((label, optionIndex) => {
+    const correct = optionIndex === shuffledAns;
     const type = correct ? "optimal" : optionIndex % 2 === 0 ? "deficient" : "toxic";
     const icon = correct ? "✅" : type === "toxic" ? "☠" : "⚠";
     return {
@@ -530,8 +549,8 @@ function enrichQuestion(question, index) {
     level: question.level,
     topic: question.topic,
     q: question.q,
-    opts: question.opts,
-    ans: question.ans,
+    opts: shuffledOpts,
+    ans: shuffledAns,
     exp: question.exp,
     category,
     nutrient: question.topic,
@@ -541,7 +560,7 @@ function enrichQuestion(question, index) {
     symptoms,
     bodyHotspots: makeHotspots(symptoms),
     options,
-    correctOption: letters[question.ans],
+    correctOption: letters[shuffledAns],
     wardlawPerspective: question.exp,
     bagel
   };

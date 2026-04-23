@@ -34,9 +34,7 @@ const OptionsUI = (() => {
       }
 
       card.innerHTML = `
-        <span class="option-icon">${opt.icon}</span>
         <div class="option-label">${opt.label}</div>
-        <div class="option-desc text-muted">${opt.description}</div>
       `;
 
       card.addEventListener("click", () => handleSelect(card, opt));
@@ -88,9 +86,9 @@ const OptionsUI = (() => {
       const card = containerEl.querySelector(`[data-option-id="${opt.id}"]`);
       if (!card) return;
       const indicatorMap = {
-        optimal:  { icon: "✅", color: "var(--neon-green)" },
-        deficient:{ icon: "🌀", color: "var(--neon-gold)"  },
-        toxic:    { icon: "☠",  color: "var(--neon-red)"   }
+        optimal:  { icon: "O", color: "var(--neon-green)" },
+        deficient:{ icon: "!", color: "var(--neon-gold)"  },
+        toxic:    { icon: "X", color: "var(--neon-red)"   }
       };
       const ind = indicatorMap[opt.type];
       if (ind) {

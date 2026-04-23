@@ -54,6 +54,13 @@ body{overflow:hidden}
   background:rgba(0,212,255,0.04);border:1px solid var(--glass-border);
   border-radius:16px;padding:16px;
 }
+.active-avatar-card{padding:12px;display:flex;align-items:center;gap:12px}
+.active-avatar-figure{width:86px;height:86px;flex-shrink:0;border-radius:14px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.active-avatar-figure img{width:100%;height:100%;object-fit:contain}
+.active-avatar-meta{min-width:0}
+.active-avatar-label{font-family:'Orbitron',monospace;font-size:0.62rem;letter-spacing:0.12em;color:var(--neon-blue);margin-bottom:3px}
+.active-avatar-state{font-family:'Orbitron',monospace;font-size:0.72rem;color:var(--neon-gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.active-avatar-note{font-size:0.74rem;color:var(--text-muted);margin-top:2px}
 .case-label{font-family:'Orbitron',monospace;font-size:0.65rem;color:var(--neon-blue);
   letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px}
 .case-text{font-size:0.88rem;color:var(--text-primary);line-height:1.65}
@@ -94,6 +101,7 @@ body{overflow:hidden}
 .avatar-thumb{border:1px solid var(--glass-border);border-radius:8px;background:rgba(255,255,255,0.03);padding:4px;cursor:pointer;transition:all 0.2s}
 .avatar-thumb img{width:100%;height:40px;object-fit:contain;border-radius:6px;background:rgba(0,0,0,0.25)}
 .avatar-thumb.active{border-color:var(--neon-blue);box-shadow:0 0 10px rgba(0,212,255,0.25)}
+.avatar-thumb.active img{filter:drop-shadow(0 0 8px rgba(0,212,255,0.45));transform:scale(1.03)}
 /* Options */
 .options-section{width:100%;padding:0 4px}
 .options-title{font-family:'Orbitron',monospace;font-size:0.65rem;color:var(--text-muted);
@@ -124,6 +132,13 @@ body{overflow:hidden}
 .levelup-overlay{display:none;position:fixed;inset:0;background:rgba(8,8,15,0.92);
   z-index:900;align-items:center;justify-content:center;flex-direction:column;gap:20px}
 .levelup-overlay.active{display:flex}
+.levelup-reward-avatar{width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 0 24px rgba(255,215,0,0.45));transform:scale(0.75);opacity:0}
+.levelup-overlay.active .levelup-reward-avatar{animation:rewardPop 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards}
+@keyframes rewardPop{
+  0%{transform:scale(0.75);opacity:0}
+  65%{transform:scale(1.12);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
 /* Game over */
 .gameover-overlay{display:none;position:fixed;inset:0;background:rgba(8,8,15,0.95);
   z-index:950;align-items:center;justify-content:center}
@@ -177,6 +192,17 @@ body{overflow:hidden}
   <div class="game-main">
     <!-- LEFT: Case description + Wardlaw feedback -->
     <div class="panel-left">
+      <div class="active-avatar-card glass" id="activeAvatarCard">
+        <div class="active-avatar-figure">
+          <img id="activeAvatarImg" src="assets/avatar/avatar_question.png" alt="Active avatar">
+        </div>
+        <div class="active-avatar-meta">
+          <div class="active-avatar-label">ACTIVE AVATAR</div>
+          <div class="active-avatar-state" id="activeAvatarState">Question mode</div>
+          <div class="active-avatar-note" id="activeAvatarNote">This avatar reacts to each case answer.</div>
+        </div>
+      </div>
+
       <div class="case-card glass" id="caseCard">
         <div class="case-label">📋 Patient Case #<span id="caseNum">1</span></div>
         <div class="case-text" id="caseText">Loading clinical case...</div>
@@ -235,7 +261,7 @@ body{overflow:hidden}
 <!-- ===== LEVEL UP OVERLAY ===== -->
 <div class="levelup-overlay" id="levelupOverlay">
   <div class="levelup-card glass" style="text-align:center;padding:40px;max-width:500px">
-    <div style="font-size:4rem;animation:logoFloat 1s ease-in-out infinite alternate">⬆️</div>
+    <img class="levelup-reward-avatar" src="assets/avatar/avatar_level_up_reward.png" alt="Level up reward avatar">
     <div class="levelup-title font-orb" id="levelupTitle" style="font-size:2rem;margin:16px 0;color:var(--neon-gold)">LEVEL UP!</div>
     <div class="font-orb text-blue" id="levelupName" style="font-size:1.3rem;margin-bottom:8px"></div>
     <div class="text-muted" id="levelupMsg" style="font-size:0.85rem;margin-bottom:24px"></div>
@@ -299,6 +325,7 @@ let timeLeft = TIME_PER_QUESTION;
 let answered = false;
 let prevPoints = 0;
 let sessionBagels = 0;
+let selectedAvatarSrc = "assets/avatar/avatar_question.png";
 
 const AVATAR_VARIANTS = [
   { id: "waiting", label: "Waiting", src: "assets/avatar/avatar_waiting.png" },
@@ -336,6 +363,7 @@ function initAvatarSelector() {
   if (!selector || !avatarImg) return;
 
   const savedAvatar = localStorage.getItem("bioforge_selected_avatar") || AVATAR_VARIANTS[0].src;
+  selectedAvatarSrc = savedAvatar;
   avatarImg.src = savedAvatar;
 
   selector.innerHTML = AVATAR_VARIANTS.map(avatar => `
@@ -348,12 +376,25 @@ function initAvatarSelector() {
     btn.addEventListener("click", () => {
       const src = btn.getAttribute("data-src");
       if (!src) return;
+      selectedAvatarSrc = src;
       avatarImg.src = src;
       localStorage.setItem("bioforge_selected_avatar", src);
       selector.querySelectorAll(".avatar-thumb").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
+      updateActiveAvatar(src, "Custom avatar selected", "This avatar is now active for your session.");
     });
   });
+
+  updateActiveAvatar(savedAvatar, "Question mode", "This avatar reacts to each case answer.");
+}
+
+function updateActiveAvatar(src, stateText, noteText) {
+  const activeImg = document.getElementById("activeAvatarImg");
+  const activeState = document.getElementById("activeAvatarState");
+  const activeNote = document.getElementById("activeAvatarNote");
+  if (activeImg && src) activeImg.src = src;
+  if (activeState && stateText) activeState.textContent = stateText;
+  if (activeNote && noteText) activeNote.textContent = noteText;
 }
 
 function buildProgressDots() {
@@ -423,6 +464,9 @@ function loadQuestion(idx) {
 
   // Avatar
   AvatarEngine.setState(currentQuestion.avatarState, currentQuestion.bodyHotspots);
+  const questionAvatar = AVATAR_VARIANTS.find(a => a.id === "question")?.src || selectedAvatarSrc;
+  document.getElementById("avatarImg").src = questionAvatar;
+  updateActiveAvatar(questionAvatar, "Question mode", "Assess the case before choosing an intervention.");
 
   // Options
   OptionsUI.render("optionsContainer", currentQuestion.options, handleOptionSelect);
@@ -492,12 +536,21 @@ function handleOptionSelect(opt, cardEl, timedOut = false) {
   if (result.isCorrect) {
     AvatarEngine.triggerSuccess();
     SoundEngine.playSuccess();
+    const successAvatar = AVATAR_VARIANTS.find(a => a.id === "correct")?.src || selectedAvatarSrc;
+    document.getElementById("avatarImg").src = successAvatar;
+    updateActiveAvatar(successAvatar, "Correct intervention", "Great decision. This treatment matches the case.");
   } else if (opt.type === "toxic") {
     AvatarEngine.triggerFailure(true);
     SoundEngine.playFailure();
+    const toxicAvatar = AVATAR_VARIANTS.find(a => a.id === "retry")?.src || selectedAvatarSrc;
+    document.getElementById("avatarImg").src = toxicAvatar;
+    updateActiveAvatar(toxicAvatar, "Unsafe intervention", "This option may cause harm. Reassess the next case.");
   } else {
     AvatarEngine.triggerFailure(false);
     SoundEngine.playFailure();
+    const wrongAvatar = AVATAR_VARIANTS.find(a => a.id === "wrong")?.src || selectedAvatarSrc;
+    document.getElementById("avatarImg").src = wrongAvatar;
+    updateActiveAvatar(wrongAvatar, "Incorrect intervention", "Close, but not the best clinical choice here.");
   }
 
   // Feedback banner
@@ -549,6 +602,9 @@ function handleOptionSelect(opt, cardEl, timedOut = false) {
 // ---- Next question ----
 function nextQuestion() {
   SoundEngine.playClick();
+  const waitingAvatar = AVATAR_VARIANTS.find(a => a.id === "waiting")?.src || selectedAvatarSrc;
+  document.getElementById("avatarImg").src = waitingAvatar;
+  updateActiveAvatar(waitingAvatar, "Waiting", "Loading the next patient case...");
   loadQuestion(currentIndex + 1);
 }
 
