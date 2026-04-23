@@ -36,6 +36,12 @@
   0%{transform:translateY(110vh) rotate(0deg)}
   100%{transform:translateY(-20vh) rotate(360deg)}
 }
+.avatar-roster{width:100%;max-width:380px}
+.avatar-roster-title{font-family:'Orbitron',monospace;font-size:0.68rem;color:var(--neon-gold);letter-spacing:0.14em;margin-bottom:8px}
+.avatar-roster-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.avatar-roster-item{border:1px solid var(--glass-border);border-radius:10px;background:rgba(255,255,255,0.03);padding:6px;text-align:center}
+.avatar-roster-item img{width:100%;height:56px;object-fit:contain;border-radius:8px;background:rgba(0,0,0,0.25)}
+.avatar-roster-item span{display:block;margin-top:4px;font-size:0.62rem;color:var(--text-muted)}
 </style>
 </head>
 <body>
@@ -90,6 +96,37 @@
         </div>
       </div>
     </div>
+
+    <div class="avatar-roster">
+      <div class="avatar-roster-title">AVATAR SET</div>
+      <div class="avatar-roster-grid">
+        <div class="avatar-roster-item">
+          <img src="assets/avatar/avatar_waiting.png" alt="Avatar waiting">
+          <span>Waiting</span>
+        </div>
+        <div class="avatar-roster-item">
+          <img src="assets/avatar/avatar_question.png" alt="Avatar question">
+          <span>Question</span>
+        </div>
+        <div class="avatar-roster-item">
+          <img src="assets/avatar/avatar_correct_answer.png" alt="Avatar correct answer">
+          <span>Correct</span>
+        </div>
+        <div class="avatar-roster-item">
+          <img src="assets/avatar/avatar_wrong_answer.png" alt="Avatar wrong answer">
+          <span>Wrong</span>
+        </div>
+        <div class="avatar-roster-item">
+          <img src="assets/avatar/avatar_better_luck_next_time.png" alt="Avatar better luck next time">
+          <span>Retry</span>
+        </div>
+        <div class="avatar-roster-item">
+          <img src="assets/avatar/avatar_level_up_reward.png" alt="Avatar level up reward">
+          <span>Level Up</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Level preview -->
     <div style="display:flex;gap:var(--sp-sm);flex-wrap:wrap">
       <span class="badge badge-blue">🩺 Intern</span>

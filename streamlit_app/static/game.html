@@ -90,6 +90,10 @@ body{overflow:hidden}
 /* Scan hint */
 .scan-hint{font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--neon-blue);
   opacity:0.6;letter-spacing:0.12em;text-align:center}
+.avatar-selector{width:100%;max-width:300px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.avatar-thumb{border:1px solid var(--glass-border);border-radius:8px;background:rgba(255,255,255,0.03);padding:4px;cursor:pointer;transition:all 0.2s}
+.avatar-thumb img{width:100%;height:40px;object-fit:contain;border-radius:6px;background:rgba(0,0,0,0.25)}
+.avatar-thumb.active{border-color:var(--neon-blue);box-shadow:0 0 10px rgba(0,212,255,0.25)}
 /* Options */
 .options-section{width:100%;padding:0 4px}
 .options-title{font-family:'Orbitron',monospace;font-size:0.65rem;color:var(--text-muted);
@@ -211,6 +215,7 @@ body{overflow:hidden}
           <div id="symptomLabels"></div>
         </div>
       </div>
+      <div class="avatar-selector" id="avatarSelector"></div>
       <div class="scan-hint" id="nutrientLabel" style="color:var(--neon-gold);font-size:0.7rem"></div>
     </div>
 
@@ -295,6 +300,15 @@ let answered = false;
 let prevPoints = 0;
 let sessionBagels = 0;
 
+const AVATAR_VARIANTS = [
+  { id: "waiting", label: "Waiting", src: "assets/avatar/avatar_waiting.png" },
+  { id: "question", label: "Question", src: "assets/avatar/avatar_question.png" },
+  { id: "correct", label: "Correct", src: "assets/avatar/avatar_correct_answer.png" },
+  { id: "wrong", label: "Wrong", src: "assets/avatar/avatar_wrong_answer.png" },
+  { id: "retry", label: "Retry", src: "assets/avatar/avatar_better_luck_next_time.png" },
+  { id: "levelup", label: "Level Up", src: "assets/avatar/avatar_level_up_reward.png" }
+];
+
 // ---- Init ----
 function init() {
   SoundEngine.init(true);
@@ -308,10 +322,38 @@ function init() {
     return;
   }
 
+  initAvatarSelector();
+
   sessionQuestions = getRandomQuestions(QUESTIONS_PER_SESSION);
   buildProgressDots();
   updateHud();
   loadQuestion(0);
+}
+
+function initAvatarSelector() {
+  const selector = document.getElementById("avatarSelector");
+  const avatarImg = document.getElementById("avatarImg");
+  if (!selector || !avatarImg) return;
+
+  const savedAvatar = localStorage.getItem("bioforge_selected_avatar") || AVATAR_VARIANTS[0].src;
+  avatarImg.src = savedAvatar;
+
+  selector.innerHTML = AVATAR_VARIANTS.map(avatar => `
+    <button class="avatar-thumb ${savedAvatar === avatar.src ? "active" : ""}" data-src="${avatar.src}" title="${avatar.label}" aria-label="${avatar.label}">
+      <img src="${avatar.src}" alt="${avatar.label} avatar" loading="lazy">
+    </button>
+  `).join("");
+
+  selector.querySelectorAll(".avatar-thumb").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const src = btn.getAttribute("data-src");
+      if (!src) return;
+      avatarImg.src = src;
+      localStorage.setItem("bioforge_selected_avatar", src);
+      selector.querySelectorAll(".avatar-thumb").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  });
 }
 
 function buildProgressDots() {
