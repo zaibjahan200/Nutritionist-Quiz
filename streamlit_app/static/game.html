@@ -97,11 +97,6 @@ body{overflow:hidden}
 /* Scan hint */
 .scan-hint{font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--neon-blue);
   opacity:0.6;letter-spacing:0.12em;text-align:center}
-.avatar-selector{width:100%;max-width:300px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
-.avatar-thumb{border:1px solid var(--glass-border);border-radius:8px;background:rgba(255,255,255,0.03);padding:4px;cursor:pointer;transition:all 0.2s}
-.avatar-thumb img{width:100%;height:40px;object-fit:contain;border-radius:6px;background:rgba(0,0,0,0.25)}
-.avatar-thumb.active{border-color:var(--neon-blue);box-shadow:0 0 10px rgba(0,212,255,0.25)}
-.avatar-thumb.active img{filter:drop-shadow(0 0 8px rgba(0,212,255,0.45));transform:scale(1.03)}
 /* Options */
 .options-section{width:100%;padding:0 4px}
 .options-title{font-family:'Orbitron',monospace;font-size:0.65rem;color:var(--text-muted);
@@ -241,7 +236,6 @@ body{overflow:hidden}
           <div id="symptomLabels"></div>
         </div>
       </div>
-      <div class="avatar-selector" id="avatarSelector"></div>
       <div class="scan-hint" id="nutrientLabel" style="color:var(--neon-gold);font-size:0.7rem"></div>
     </div>
 
@@ -349,43 +343,10 @@ function init() {
     return;
   }
 
-  initAvatarSelector();
-
   sessionQuestions = getRandomQuestions(QUESTIONS_PER_SESSION);
   buildProgressDots();
   updateHud();
   loadQuestion(0);
-}
-
-function initAvatarSelector() {
-  const selector = document.getElementById("avatarSelector");
-  const avatarImg = document.getElementById("avatarImg");
-  if (!selector || !avatarImg) return;
-
-  const savedAvatar = localStorage.getItem("bioforge_selected_avatar") || AVATAR_VARIANTS[0].src;
-  selectedAvatarSrc = savedAvatar;
-  avatarImg.src = savedAvatar;
-
-  selector.innerHTML = AVATAR_VARIANTS.map(avatar => `
-    <button class="avatar-thumb ${savedAvatar === avatar.src ? "active" : ""}" data-src="${avatar.src}" title="${avatar.label}" aria-label="${avatar.label}">
-      <img src="${avatar.src}" alt="${avatar.label} avatar" loading="lazy">
-    </button>
-  `).join("");
-
-  selector.querySelectorAll(".avatar-thumb").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const src = btn.getAttribute("data-src");
-      if (!src) return;
-      selectedAvatarSrc = src;
-      avatarImg.src = src;
-      localStorage.setItem("bioforge_selected_avatar", src);
-      selector.querySelectorAll(".avatar-thumb").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      updateActiveAvatar(src, "Custom avatar selected", "This avatar is now active for your session.");
-    });
-  });
-
-  updateActiveAvatar(savedAvatar, "Question mode", "This avatar reacts to each case answer.");
 }
 
 function updateActiveAvatar(src, stateText, noteText) {
